@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import { ArrowPathIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
+import { CaseAnalysis, AnalysisResponse } from '@/types';
 
 export default function AnalyzePage() {
   const [caseText, setCaseText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [analysis, setAnalysis] = useState<{
-    plaintiff: string[];
-    defense: string[];
-  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<CaseAnalysis | null>(null);
 
   const analyzeCaseStudy = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -23,11 +23,25 @@ export default function AnalyzePage() {
         body: JSON.stringify({ caseText }),
       });
 
-      const data = await response.json();
-      setAnalysis(data);
+      const data: AnalysisResponse = await response.json();
+      
+      if (data.error) {
+        setError(data.error);
+        return;
+      }
+
+      if (!data.plaintiff || !data.defense) {
+        setError('Invalid response format from server');
+        return;
+      }
+
+      setAnalysis({
+        plaintiff: data.plaintiff,
+        defense: data.defense,
+      });
     } catch (error) {
       console.error('Error analyzing case:', error);
-      // TODO: Add proper error handling
+      setError('An error occurred while analyzing the case. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -72,6 +86,11 @@ export default function AnalyzePage() {
                   'Analyze Case'
                 )}
               </button>
+              {error && (
+                <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400">
+                  {error}
+                </div>
+              )}
             </div>
           </div>
 
