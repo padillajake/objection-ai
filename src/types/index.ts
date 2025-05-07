@@ -4,7 +4,7 @@ export interface CaseAnalysis {
 }
 
 export interface AnalysisResponse {
-  error?: string;
   plaintiff?: string[];
   defense?: string[];
+  error?: string;
 } 
